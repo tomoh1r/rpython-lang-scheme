@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
-import py
+import os
 
-from . import (
+from scheme import (
     object as ssobject,
     syntax,
     procedure,
@@ -23,11 +23,14 @@ for mod in (ssobject, syntax, procedure, macro):
         except (TypeError, AttributeError):
             pass
 
-de_file = py.path.local(__file__).dirpath().join("r5rs_derived_expr.ss")
-de_code = de_file.read()
-de_expr_lst = parse(de_code)
+
+_here = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(_here, 'r5rs_derived_expr.ss')) as fp:
+    de_expr_lst = parse(fp.read())
+
 
 _sys_ctx = ExecutionContext(globalscope=_sys_dict)
+
 
 # for expr in de_expr_lst:
 #     expr.eval(_sys_ctx)
