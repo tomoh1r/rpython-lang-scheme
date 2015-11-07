@@ -1,12 +1,15 @@
 from __future__ import absolute_import
 
 from rpython.rlib.parsing.pypackrat import PackratParser
+# to build, we must contain this import
+from rpython.rlib.parsing.makepackrat import BacktrackException, Status  # NOQA
 
-from scheme.object import (
-    W_Pair,
-    symbol,
-    w_nil,
-    SchemeSyntaxError,
+# to build, we must contain this import
+from scheme.object import (  # NOQA
+    W_Pair, W_Integer, W_String, symbol,
+    w_nil, W_Boolean, W_Real,
+    w_ellipsis, W_Character,
+    SchemeSyntaxError, W_Vector,
 )
 
 
