@@ -16,6 +16,9 @@ from scheme.execution import ExecutionContext
 
 def entry_point(argv):
     path = argv[0]
+    if len(argv) == 2:
+        path = argv[1]
+
     try:
         f = open_file_as_stream(path, buffering=0)
     except OSError as e:

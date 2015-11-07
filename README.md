@@ -13,9 +13,10 @@ $ ./venv/bin/pip install -U -r requirements.txt
 $ ./venv/bin/rpython targetscheme.py
 ```
 
-, and Run
+and Run
 
 ```console
-$ ./scheme-c
-hello, world
+$ ./scheme-c sample.ss
+<<W_Boolean object at 0x7f61f0e7a020>>
+<<W_Boolean object at 0x7f61f0e7a020>>
 ```
