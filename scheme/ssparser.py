@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 
 from rpython.rlib.parsing.pypackrat import PackratParser
-from rpython.rlib.parsing.makepackrat import BacktrackException, Status
 
 from scheme.object import (
-    W_Pair, W_Integer, W_String, symbol,
-    w_nil, W_Boolean, W_Real,
-    w_ellipsis, W_Character, SchemeSyntaxError, W_Vector
+    W_Pair,
+    symbol,
+    w_nil,
+    SchemeSyntaxError,
 )
 
 
@@ -29,6 +29,7 @@ def str_unquote(s):
         pos += 1
 
     return ''.join(str_lst)
+
 
 class SchemeParser(PackratParser):
     r"""
@@ -69,27 +70,27 @@ class SchemeParser(PackratParser):
 
     IGNORE:
         ` |\n|\t|;[^\n]*`;
-    
+
     EOF:
         !__any__;
-    
+
     file:
         IGNORE*
         s = sexpr*
         EOF
         return {s};
-    
+
     quote:
        `'`
        s = sexpr
        return {quote(s)};
-    
+
     qq:
        `\``
        s = sexpr
        return {qq(s)};
-       
-       
+
+
     unquote_splicing:
        `\,@`
        s = sexpr
@@ -99,10 +100,10 @@ class SchemeParser(PackratParser):
        `\,`
        s = sexpr
        return {unquote(s)};
-    
+
     sexpr:
         list
-      | vector  
+      | vector
       | quote
       | qq
       | unquote_splicing
@@ -143,21 +144,28 @@ class SchemeParser(PackratParser):
       | return {w_nil};
     """
 
+
 def parse(code):
     p = SchemeParser(code)
     return p.file()
 
+
 ##
 # Parser helpers
 ##
+
+
 def quote(sexpr):
     return W_Pair(symbol('quote'), W_Pair(sexpr, w_nil))
+
 
 def qq(sexpr):
     return W_Pair(symbol('quasiquote'), W_Pair(sexpr, w_nil))
 
+
 def unquote(sexpr):
     return W_Pair(symbol('unquote'), W_Pair(sexpr, w_nil))
+
 
 def unquote_splicing(sexpr):
     return W_Pair(symbol('unquote-splicing'), W_Pair(sexpr, w_nil))

@@ -17,7 +17,7 @@ class ExecutionContext(object):
     { "IDENTIFIER": Location(W_Root()) }
     """
     def __init__(self, globalscope=None, scope=None, closure=False,
-            cont_stack=None):
+                 cont_stack=None):
         if scope is None:
             self.scope = {}
         else:
@@ -53,7 +53,7 @@ class ExecutionContext(object):
 
     def copy(self):
         return ExecutionContext(self.globalscope, self.scope.copy(), True,
-                self.cont_stack)
+                                self.cont_stack)
 
     def get(self, name):
         loc = self.scope.get(name, None)

@@ -29,7 +29,7 @@ class SyntaxRules(W_Macro):
             if not isinstance(w_literals.car, W_Symbol):
                 raise SchemeSyntaxError
 
-            #XXX locations here
+            # XXX locations here
             literal_name = w_literals.car.to_string()
             w_temp = ctx.get_location(literal_name)
 
@@ -47,13 +47,13 @@ class SyntaxRules(W_Macro):
             w_pattern = w_syntax.car
             w_template = w_syntax.get_cdr_as_pair().car
 
-            #do stuff with w_syntax rules
+            # do stuff with w_syntax rules
             syntax_lst.append(SyntaxRule(w_pattern, w_template, literals_map))
-            
             w_syntax_lst = w_syntax_lst.cdr
 
-        #closes template in syntactic enviroment at the point of definition
+        # closes template in syntactic enviroment at the point of definition
         return W_Transformer(syntax_lst, ctx)
+
 
 class Ellipsis(W_Root):
     def __init__(self, mdict_lst):
@@ -62,18 +62,23 @@ class Ellipsis(W_Root):
     def __repr__(self):
         return "#<e: " + str(self.mdict_lst) + ">"
 
+
 class EllipsisException(SchemeException):
     def __init__(self, length):
         self.length = length
 
+
 class EllipsisTemplate(SchemeException):
     pass
+
 
 class EllipsisPattern(SchemeException):
     pass
 
+
 class MatchError(SchemeException):
     pass
+
 
 class SyntaxRule(object):
     def __init__(self, pattern, template, literals):
@@ -86,23 +91,23 @@ class SyntaxRule(object):
         return self.pattern.to_string() + " -> " + self.template.to_string()
 
     def match(self, ctx, w_expr):
-        #we use .cdr here, because keyword should not be a macro variable
+        # we use .cdr here, because keyword should not be a macro variable
         assert isinstance(w_expr, W_Pair)
         return self.matchr(ctx, self.pattern.cdr, w_expr.cdr)
 
     def matchr(self, ctx, w_patt, w_expr):
-        #print "  >", w_patt.to_string(), w_expr.to_string()
+        # print "  >", w_patt.to_string(), w_expr.to_string()
         if isinstance(w_patt, W_Pair):
             w_pattcar = w_patt.car
             w_pattcdr = w_patt.cdr
             if isinstance(w_expr, W_Pair):
                 mdict_car = self.matchr(ctx, w_pattcar, w_expr.car)
                 try:
-                    #we catch EllipsisPattern here because in car
+                    # we catch EllipsisPattern here because in car
                     # we dont know how to deal with it
                     mdict_cdr = self.matchr(ctx, w_pattcdr, w_expr.cdr)
                 except EllipsisPattern:
-                    #print "ellipsis matched", w_patt, w_expr
+                    # print "ellipsis matched", w_patt, w_expr
 
                     mdict_lst = []
                     w_pair = w_expr
@@ -122,14 +127,14 @@ class SyntaxRule(object):
                 return mdict_car
 
             if w_expr is w_nil:
-                #one matched to ellipsis, previous (up) w_expr.car
+                # one matched to ellipsis, previous (up) w_expr.car
                 if w_pattcar is w_ellipsis:
                     raise EllipsisPattern
 
-                #zero matched to ellipsis
+                # zero matched to ellipsis
                 if isinstance(w_pattcdr, W_Pair) and \
                         w_pattcdr.car is w_ellipsis:
-                    #all symbols from w_pattcar match zero length Ellipsis
+                    # all symbols from w_pattcar match zero length Ellipsis
                     return self.dict_traverse_expr(w_pattcar, Ellipsis([]))
 
         if w_patt is w_ellipsis:
@@ -157,7 +162,7 @@ class SyntaxRule(object):
         if w_patt is w_nil and w_expr is w_nil:
             return {}
 
-        #w_patt is w_nil, but w_expr is not
+        # w_patt is w_nil, but w_expr is not
         # or w_patt is W_Pair but w_expr is not
         raise MatchError
 
@@ -168,10 +173,11 @@ class SyntaxRule(object):
             dict_car.update(dict_cdr)
             return dict_car
 
-        if isinstance(expr, W_Symbol) and not expr is w_ellipsis:
+        if isinstance(expr, W_Symbol) and expr is not w_ellipsis:
             return {expr.name: val}
 
         return {}
+
 
 class SymbolClosure(W_Symbol):
     def __init__(self, ctx, symbol):
@@ -182,15 +188,16 @@ class SymbolClosure(W_Symbol):
         self.closure = ctx
 
     def eval_tr(self, ctx):
-        #this symbol is in Syntactic Closure 
+        # this symbol is in Syntactic Closure
         return self.symbol.eval_tr(self.closure)
 
     def to_string(self):
-        #return "#<closure: " + self.sexpr.to_string() + ">"
+        # return "#<closure: " + self.sexpr.to_string() + ">"
         return self.symbol.to_string()
 
     def __repr__(self):
         return "<sc:W_Symbol " + self.to_string() + ">"
+
 
 class PairClosure(W_Pair):
     def __init__(self, ctx, pair):
@@ -202,15 +209,16 @@ class PairClosure(W_Pair):
         self.closure = ctx
 
     def eval_tr(self, ctx):
-        #this pair is in Syntactic Closure 
+        # this pair is in Syntactic Closure
         return self.pair.eval_tr(self.closure)
 
     def to_string(self):
-        #return "#<closure: " + self.sexpr.to_string() + ">"
+        # return "#<closure: " + self.sexpr.to_string() + ">"
         return self.pair.to_string()
 
     def __repr__(self):
         return "<sc:W_Pair " + self.to_string() + ">"
+
 
 class W_Transformer(W_Procedure):
     def __init__(self, syntax_lst, ctx, pname=""):
@@ -221,7 +229,7 @@ class W_Transformer(W_Procedure):
     def match(self, ctx, w_expr):
         for rule in self.syntax_lst:
             try:
-                #print "m>", rule.pattern.to_string()
+                # print "m>", rule.pattern.to_string()
                 match_dict = rule.match(ctx, w_expr)
                 return (rule.template, match_dict)
             except MatchError:
@@ -231,7 +239,7 @@ class W_Transformer(W_Procedure):
 
     def expand(self, ctx, w_expr):
         try:
-            #print w_expr.to_string()
+            # print w_expr.to_string()
             (template, match_dict) = self.match(ctx, w_expr)
         except MatchError:
             raise SchemeSyntaxError
@@ -239,7 +247,7 @@ class W_Transformer(W_Procedure):
         return self.substitute(ctx, template, match_dict)
 
     def find_elli(self, expr, mdict):
-        #filter mdict, returning only ellipsis which appear in expr
+        # filter mdict, returning only ellipsis which appear in expr
         if isinstance(expr, W_Pair):
             edict_car = self.find_elli(expr.car, mdict)
             edict_cdr = self.find_elli(expr.cdr, mdict)
@@ -282,13 +290,13 @@ class W_Transformer(W_Procedure):
             try:
                 w_cdr = self.substituter(ctx, sexpr.cdr, match_dict)
             except EllipsisTemplate:
-                #print "ellipsis expand", sexpr
+                # print "ellipsis expand", sexpr
                 sexprcdr = sexpr.get_cdr_as_pair()
                 try:
-                    #we can still have something behind ellipsis
+                    # we can still have something behind ellipsis
                     w_cdr = self.substituter(ctx, sexprcdr.cdr, match_dict)
                 except EllipsisTemplate:
-                    #it can also be ellipsis
+                    # it can also be ellipsis
                     # lets pretend its usual <(obj ...) ...>
                     # instead of <obj ... ...>
                     # we will *flatten* the result later
@@ -297,21 +305,21 @@ class W_Transformer(W_Procedure):
                     return self.substituter(ctx, w_outer, match_dict, True)
 
                 plst = []
-                #find_elli gets ellipses from match_dict relevant to sexpr.car
+                # find_elli gets ellipses from match_dict relevant to sexpr.car
                 mdict_elli = self.find_elli(sexpr.car, match_dict)
                 elli_len = 0
                 for (key, val) in mdict_elli.items():
                     if elli_len == 0 or elli_len == len(val.mdict_lst):
                         elli_len = len(val.mdict_lst)
                     else:
-                        #we can treat is as an error if ellipsis has
+                        # we can treat is as an error if ellipsis has
                         # different match length
                         # # or get the shortest one
                         raise SchemeSyntaxError
 
-                #generate elli_len substitutions for ellipsis
+                # generate elli_len substitutions for ellipsis
                 for i in range(elli_len):
-                    #one level of ellipsis nesting lower
+                    # one level of ellipsis nesting lower
                     new_mdict = match_dict.copy()
                     for (key, val) in mdict_elli.items():
                         new_mdict[key] = val.mdict_lst[i][key]
@@ -320,7 +328,7 @@ class W_Transformer(W_Procedure):
                     plst.append(sub)
 
                 if flatten:
-                    #we have to flatten these list, it means append them
+                    # we have to flatten these list, it means append them
                     # together, and remember about w_cdr
                     w_lst = self.plst_append(plst, w_cdr)
 
@@ -348,13 +356,13 @@ class W_Transformer(W_Procedure):
 
             w_sub = match_dict.get(sexpr.name, None)
             if w_sub is not None:
-                #Hygenic macros close their input forms in the syntactic
+                # Hygenic macros close their input forms in the syntactic
                 # enviroment at the point of use
 
                 if isinstance(w_sub, Ellipsis):
                     return w_sub
 
-                #not always needed, because w_sub can have no W_Symbol inside
+                # not always needed, because w_sub can have no W_Symbol inside
                 if isinstance(w_sub, W_Symbol) and \
                         not isinstance(w_sub, SymbolClosure):
                     return SymbolClosure(ctx, w_sub)
@@ -370,7 +378,7 @@ class W_Transformer(W_Procedure):
     substitute = substituter
 
     def expand_eval(self, ctx, sexpr):
-        #we have lexical scopes:
+        # we have lexical scopes:
         # 1. macro was defined - self.closure
         # 2. macro is called   - ctx
         # 3. macro is expanded, can introduce new bindings - expand_ctx
@@ -381,6 +389,7 @@ class W_Transformer(W_Procedure):
     def procedure(self, ctx, lst):
         return self.expand_eval(ctx, lst[0])
 
+
 class W_DerivedMacro(W_Macro):
     def __init__(self, name, transformer):
         self.name = name
@@ -390,11 +399,13 @@ class W_DerivedMacro(W_Macro):
         return "#<derived-macro %s>" % (self.name,)
 
     def call(self, ctx, lst):
-        return self.transformer.expand_eval(ctx,
-                W_Pair(W_Symbol(self.name), lst))
+        return self.transformer.expand_eval(
+            ctx,
+            W_Pair(W_Symbol(self.name), lst))
 
     def expand(self, ctx, lst):
         return self.transformer.expand(ctx, lst)
+
 
 class DefineSyntax(W_Macro):
     _symbol_name = "define-syntax"
@@ -414,14 +425,15 @@ class DefineSyntax(W_Macro):
 
         w_macro = W_DerivedMacro(w_def.name, w_transformer)
         ctx.set(w_def.name, w_macro)
-        return w_macro #undefined
- 
+        return w_macro  # undefined
+
+
 class LetSyntax(W_Macro):
-    #XXX letrec-syntax missing
+    # XXX letrec-syntax missing
     _symbol_name = "let-syntax"
 
     def call_tr(self, ctx, lst):
-        #let uses eval_body, so it is tail-recursive aware
+        # let uses eval_body, so it is tail-recursive aware
         if not isinstance(lst, W_Pair):
             raise SchemeSyntaxError
         local_ctx = ctx.copy()
@@ -442,4 +454,3 @@ class LetSyntax(W_Macro):
             w_formal = w_formal.cdr
 
         return Body(lst.cdr).eval_tr(local_ctx)
-

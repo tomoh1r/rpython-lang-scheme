@@ -1,34 +1,41 @@
 class SchemeException(Exception):
     pass
 
+
 class UnboundVariable(SchemeException):
     def __str__(self):
         return "Unbound variable %s" % (self.args[0], )
+
 
 class NotCallable(SchemeException):
     def __str__(self):
         return "%s is not a callable" % (self.args[0].to_string(), )
 
+
 class WrongArgsNumber(SchemeException):
     def __str__(self):
         if len(self.args) == 2:
-            return ("Wrong number of args. Got: %d, expected: %s" %
-                (self.args[0], self.args[1]))
+            return ("Wrong number of args. Got: %d, expected: %s"
+                    % (self.args[0], self.args[1]))
         else:
             return "Wrong number of args."
+
 
 class WrongArgType(SchemeException):
     def __str__(self):
         return "Wrong argument type: %s is not %s" % \
                 (self.args[0].to_string(), self.args[1])
 
+
 class SchemeSyntaxError(SchemeException):
     def __str__(self):
         return "Syntax error"
 
+
 class SchemeQuit(SchemeException):
     """raised on (quit) evaluation"""
     pass
+
 
 class W_Root(object):
     __slots__ = []
@@ -64,16 +71,19 @@ class W_Root(object):
     eqv = eq
     equal = eqv
 
+
 class W_Undefined(W_Root):
     def to_repr(self):
         return "#<undefined>"
 
     to_string = to_repr
 
+
 w_undefined = W_Undefined()
 
+
 class W_Symbol(W_Root):
-    #class dictionary for symbol storage
+    # class dictionary for symbol storage
     obarray = {}
 
     def __init__(self, val):
@@ -88,10 +98,11 @@ class W_Symbol(W_Root):
         w_obj = ctx.get(self.name)
         return (w_obj, None)
 
+
 def symbol(name):
-    #use this to create new symbols, it stores all symbols
-    #in W_Symbol.obarray dict
-    #if already in obarray return it 
+    # use this to create new symbols, it stores all symbols
+    # in W_Symbol.obarray dict
+    # if already in obarray return it
     name = name.lower()
     w_symb = W_Symbol.obarray.get(name, None)
     if w_symb is None:
@@ -101,7 +112,9 @@ def symbol(name):
     assert isinstance(w_symb, W_Symbol)
     return w_symb
 
+
 w_ellipsis = symbol("...")
+
 
 class W_Boolean(W_Root):
     def __new__(cls, val):
@@ -112,9 +125,11 @@ class W_Boolean(W_Root):
 
     def __init__(self, val):
         pass
-            
+
+
 class W_True(W_Boolean):
     _w_true = None
+
     def __new__(cls, val):
         if cls._w_true is None:
             cls._w_true = W_Root.__new__(cls)
@@ -127,10 +142,13 @@ class W_True(W_Boolean):
         return "#t"
     to_string = to_repr
 
+
 w_true = W_True(True)
+
 
 class W_False(W_Boolean):
     _w_false = None
+
     def __new__(cls, val):
         if cls._w_false is None:
             cls._w_false = W_Root.__new__(cls)
@@ -146,7 +164,9 @@ class W_False(W_Boolean):
     def to_boolean(self):
         return False
 
+
 w_false = W_False(False)
+
 
 class W_String(W_Root):
     def __init__(self, val):
@@ -174,12 +194,15 @@ class W_String(W_Root):
             return False
         return self.strval == w_obj.strval
 
+
 _charname_to_char = {
     'space': ' ',
     'newline': '\n',
 }
 
+
 _char_to_charname = dict((v, k) for k, v in _charname_to_char.items())
+
 
 class W_Character(W_Root):
     def __init__(self, val):
@@ -207,6 +230,7 @@ class W_Character(W_Root):
             return False
         return self.chrval == w_obj.chrval
     equal = eqv
+
 
 class W_Real(W_Root):
     def __init__(self, val):
@@ -252,7 +276,9 @@ class W_Real(W_Root):
                 and self.realval == w_obj.realval
     equal = eqv
 
+
 W_Number = W_Real
+
 
 class W_Integer(W_Real):
     def __init__(self, val):
@@ -264,7 +290,7 @@ class W_Integer(W_Real):
         return str(self.intval)
 
     def to_repr(self):
-        #return repr(self.intval)
+        # return repr(self.intval)
         return str(int(self.intval))
 
     def to_number(self):
@@ -276,11 +302,13 @@ class W_Integer(W_Real):
     def to_float(self):
         return float(self.intval)
 
+
 class W_Eval(W_Root):
     # this class is for objects which do more than
     # evaluate to themselves
+
     def eval_cf(self, ctx, caller, cont, elst=[], enum=0):
-        #eval with continuation frame!
+        # eval with continuation frame!
         ctx.cont_stack.append(ContinuationFrame(caller, cont, elst, enum))
         result = self.eval(ctx)
         ctx.cont_stack.pop()
@@ -289,16 +317,19 @@ class W_Eval(W_Root):
     def continue_tr(self, ctx, lst, elst, cnt=True):
         raise NotImplementedError
 
+
 class W_List(W_Eval):
     pass
 
+
 class W_Nil(W_List):
     _w_nil = None
+
     def __new__(cls):
         if cls._w_nil is None:
             cls._w_nil = W_Root.__new__(cls)
         return cls._w_nil
-    
+
     def __repr__(self):
         return "<W_Nil ()>"
 
@@ -313,7 +344,9 @@ class W_Nil(W_List):
     def eval_tr(self, ctx):
         raise SchemeSyntaxError
 
+
 w_nil = W_Nil()
+
 
 class W_Pair(W_List):
     def __init__(self, car, cdr):
@@ -326,11 +359,11 @@ class W_Pair(W_List):
     def to_lstring(self):
         car = self.car.to_string()
         cdr = self.cdr
-        if isinstance(cdr, W_Pair): #still proper list
+        if isinstance(cdr, W_Pair):  # still proper list
             return car + " " + cdr.to_lstring()
-        elif cdr is w_nil: #end of proper list
+        elif cdr is w_nil:  # end of proper list
             return car
-        else: #end proper list with dotted
+        else:  # end proper list with dotted
             return car + " . " + cdr.to_string()
 
     def to_repr(self):
@@ -339,11 +372,11 @@ class W_Pair(W_List):
     def to_lrepr(self):
         car = self.car.to_repr()
         cdr = self.cdr
-        if isinstance(cdr, W_Pair): #still proper list
+        if isinstance(cdr, W_Pair):  # still proper list
             return car + " " + cdr.to_lrepr()
-        elif cdr is w_nil: #end of proper list
+        elif cdr is w_nil:  # end of proper list
             return car
-        else: #end proper list with dotted
+        else:  # end proper list with dotted
             return car + " . " + cdr.to_repr()
 
     def __repr__(self):
@@ -376,7 +409,7 @@ class W_Pair(W_List):
         if not isinstance(oper, W_Callable):
             raise NotCallable(oper)
 
-        #a proper (oper args ...) call
+        # a proper (oper args ...) call
         # self.cdr has to be a proper list
         cdr = self.cdr
         if isinstance(cdr, W_List):
@@ -401,19 +434,20 @@ class W_Pair(W_List):
                 self.car.equal(w_obj.car) and \
                 self.cdr.equal(w_obj.cdr)
 
+
 class W_Vector(W_Root):
     def __init__(self, vect):
         self.vect = vect
 
     def to_repr(self):
-        #strs = map(lambda item: item.to_repr(), self.vect)
+        # strs = map(lambda item: item.to_repr(), self.vect)
         strs = []
         for w_item in self.vect:
             strs.append(w_item.to_repr())
         return "#(" + " ".join(strs) + ")"
 
     def to_string(self):
-        #strs = map(lambda item: item.to_string(), self.vect)
+        # strs = map(lambda item: item.to_string(), self.vect)
         strs = []
         for w_item in self.vect:
             strs.append(w_item.to_string())
@@ -434,14 +468,16 @@ class W_Vector(W_Root):
             raise SchemeException
         return self.vect[offset]
 
+
 class W_Callable(W_Eval):
     def call_tr(self, ctx, lst):
-        #usually tail-recursive call is normal call
+        # usually tail-recursive call is normal call
         # which returns tuple with no further ExecutionContext
         return (self.call(ctx, lst), None)
 
     def call(self, ctx, lst):
         raise NotImplementedError
+
 
 class Body(W_Eval):
     def __init__(self, body):
@@ -481,6 +517,7 @@ class Body(W_Eval):
 
         raise SchemeSyntaxError
 
+
 class W_Procedure(W_Callable):
     def __init__(self, pname=""):
         self.pname = pname
@@ -494,12 +531,12 @@ class W_Procedure(W_Callable):
         return self.continue_tr(ctx, lst, [], False)
 
     def continue_tr(self, ctx, lst, elst, cnt=True):
-        #evaluate all arguments into list
+        # evaluate all arguments into list
         arg_lst = elst
         arg_num = 0
         arg = lst
         while isinstance(arg, W_Pair):
-            #this is non tail-call, it should create continuation frame
+            # this is non tail-call, it should create continuation frame
             # continuation frame consist:
             #  - plst of arleady evaluated arguments
             #  - arg (W_Pair) = arg.cdr as a pointer to not evaluated
@@ -518,7 +555,7 @@ class W_Procedure(W_Callable):
         if cnt is False:
             return procedure_result
 
-        #if procedure_result still has to be evaluated
+        # if procedure_result still has to be evaluated
         # this can happen in case if self isinstance of W_Lambda
         if procedure_result[1] is None:
             procedure_result = procedure_result[0]
@@ -535,9 +572,10 @@ class W_Procedure(W_Callable):
         raise NotImplementedError
 
     def procedure_tr(self, ctx, lst):
-        #usually tail-recursive procedure is normal procedure
+        # usually tail-recursive procedure is normal procedure
         # which returns tuple with no further ExecutionContext
         return (self.procedure(ctx, lst), None)
+
 
 class W_Macro(W_Callable):
     def __init__(self, pname=""):
@@ -545,6 +583,7 @@ class W_Macro(W_Callable):
 
     def to_string(self):
         return "#<primitive-macro %s>" % (self.pname,)
+
 
 class W_Promise(W_Root):
     def __init__(self, expr, ctx):
@@ -557,21 +596,23 @@ class W_Promise(W_Root):
 
     def force(self, ctx):
         if self.result is None:
-            #XXX cont_stack copy to be cont. friendly
+            # XXX cont_stack copy to be cont. friendly
             self.result = self.expr.eval(self.closure.copy())
 
         return self.result
+
 
 class Formal(object):
     def __init__(self, name, islist=False):
         self.name = name
         self.islist = islist
 
+
 class W_Lambda(W_Procedure):
     def __init__(self, args, body, closure, pname="#f"):
         self.args = []
         arg = args
-        while not arg is w_nil:
+        while arg is not w_nil:
             if isinstance(arg, W_Symbol):
                 self.args.append(Formal(arg.to_string(), True))
                 break
@@ -580,7 +621,7 @@ class W_Lambda(W_Procedure):
                     raise SchemeSyntaxError
                 if not isinstance(arg.car, W_Symbol):
                     raise WrongArgType(arg.car, "Identifier")
-                #list of argument names, not evaluated
+                # list of argument names, not evaluated
                 self.args.append(Formal(arg.car.to_string(), False))
                 arg = arg.cdr
 
@@ -592,14 +633,14 @@ class W_Lambda(W_Procedure):
         return "#<procedure %s>" % (self.pname,)
 
     def procedure_tr(self, ctx, lst):
-        #must be tail-recursive aware, uses eval_body
-        #ctx is a caller context, which is joyfully ignored
+        # must be tail-recursive aware, uses eval_body
+        # ctx is a caller context, which is joyfully ignored
 
         local_ctx = self.closure.copy()
-        #if lambda procedure should keep caller cont_stack
-        local_ctx.cont_stack = ctx.cont_stack #[:]
+        # if lambda procedure should keep caller cont_stack
+        local_ctx.cont_stack = ctx.cont_stack  # [:]
 
-        #set lambda arguments
+        # set lambda arguments
         for idx in range(len(self.args)):
             formal = self.args[idx]
             if formal.islist:
@@ -621,6 +662,7 @@ def plst2lst(plst, w_cdr=w_nil):
 
     return w_cdr
 
+
 def lst2plst(w_list):
     """coverts W_Pair scheme list into a python list() of W_Root"""
     lst = []
@@ -630,18 +672,21 @@ def lst2plst(w_list):
             raise WrongArgType(w_list, "List")
         lst.append(w_iter.car)
         w_iter = w_iter.cdr
-
     return lst
+
 
 ##
 # Continuations
 ##
+
+
 class ContinuationReturn(SchemeException):
     def __init__(self, result):
         self.result = result
 
+
 class ContinuationFrame(object):
-    def __init__(self, caller, continuation, evaluated_args = [], enum=0):
+    def __init__(self, caller, continuation, evaluated_args=[], enum=0):
         self.caller = caller
         assert isinstance(continuation, W_Root)
         self.continuation = continuation
@@ -652,19 +697,20 @@ class ContinuationFrame(object):
     def run(self, ctx, arg):
         elst = self.evaluated_args[:self.evaluated_args_num]
         elst.append(arg)
-        #print 'c>', self.caller, elst, self.continuation
+        # print 'c>', self.caller, elst, self.continuation
         return self.caller.continue_tr(ctx, self.continuation, elst, True)
+
 
 class Continuation(W_Procedure):
     def __init__(self, ctx, continuation):
         self.closure = ctx
-        #copy of continuation stack this means that cont_stack is not
+        # copy of continuation stack this means that cont_stack is not
         # global, so watch out with closures
         self.cont_stack = continuation[:]
         try:
             self.continuation = self.cont_stack.pop()
         except IndexError:
-            #continuation captured on top-level
+            # continuation captured on top-level
             self.continuation = None
 
     def __repr__(self):
@@ -674,11 +720,11 @@ class Continuation(W_Procedure):
         return "#<continuation -> %s>" % (self.continuation,)
 
     def procedure_tr(self, ctx, lst):
-        #caller ctx is ignored
+        # caller ctx is ignored
         if len(lst) == 0:
             lst.append(w_undefined)
 
-        #print "Continuation called", self.cont_stack
+        # print "Continuation called", self.cont_stack
         self.closure.cont_stack = self.cont_stack[:]
         cont = self.continuation
         if cont is None:
@@ -686,12 +732,13 @@ class Continuation(W_Procedure):
 
         return cont.run(self.closure, lst[0])
 
+
 class CallCC(W_Procedure):
     _symbol_name = "call/cc"
 
     def procedure_tr(self, ctx, lst):
         if len(lst) != 1 or not isinstance(lst[0], W_Procedure):
-            #print lst[0]
+            # print lst[0]
             raise SchemeSyntaxError
 
         w_lambda = lst[0]
@@ -699,4 +746,3 @@ class CallCC(W_Procedure):
             raise SchemeSyntaxError
         cc = Continuation(ctx, ctx.cont_stack)
         return w_lambda.call_tr(ctx, W_Pair(cc, w_nil))
-
