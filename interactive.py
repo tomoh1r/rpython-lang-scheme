@@ -8,10 +8,12 @@ import sys
 
 from rpython.rlib.parsing.makepackrat import BacktrackException
 
-from scheme.object import (
-    SchemeException, SchemeQuit, ContinuationReturn
-)
 from scheme.execution import ExecutionContext
+from scheme.object import (
+    SchemeException,
+    SchemeQuit,
+    ContinuationReturn
+)
 from scheme.ssparser import parse
 
 
@@ -24,7 +26,7 @@ def interactive():
     ctx = ExecutionContext()
     to_exec = ""
     cont = False
-    while 1:
+    while True:
         if cont:
             ps = '.. '
         else:

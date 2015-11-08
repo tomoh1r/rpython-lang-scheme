@@ -6,18 +6,18 @@ from __future__ import absolute_import
 import os
 import sys
 
-from rpython.rlib.streamio import open_file_as_stream
 from rpython.rlib.parsing.makepackrat import BacktrackException
+from rpython.rlib.streamio import open_file_as_stream
 
-from scheme.ssparser import parse
-from scheme.object import SchemeQuit, ContinuationReturn
 from scheme.execution import ExecutionContext
+from scheme.object import SchemeQuit, ContinuationReturn
+from scheme.ssparser import parse
 
 
 def entry_point(argv):
     path = argv[0]
-    if len(argv) == 2:
-        path = argv[1]
+    if len(argv) != 1:
+        path = argv[-1]
 
     try:
         f = open_file_as_stream(path, buffering=0)

@@ -4,13 +4,10 @@ fork from [lang-scheme](https://bitbucket.org/pypy/lang-scheme)
 
 ## Quick Start
 
-Build
+Build. If you have pypy, you can use it.
 
 ```console
-$ virtualenv --clear --no-setuptools venv
-$ ./venv/bin/python misc/get-pip.py
-$ ./venv/bin/pip install -U -r requirements.txt
-$ ./venv/bin/rpython targetscheme.py
+$ python rpython/bin/rpython targetscheme.py
 ```
 
 and Run
