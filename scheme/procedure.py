@@ -1,21 +1,13 @@
-from __future__ import absolute_import
-
 import py
-
-from scheme.object import (
-    W_Boolean, W_Pair, W_Symbol,
-    W_Number, W_Real, W_Integer, W_List, W_Character, W_Vector,
-    W_Procedure, W_String, W_Promise, plst2lst, w_undefined,
-    SchemeQuit, WrongArgType, WrongArgsNumber,
-    w_nil, w_true, w_false, lst2plst
-)
-
+from scheme.object import W_Root, W_Boolean, W_Pair, W_Symbol, \
+        W_Number, W_Real, W_Integer, W_List, W_Character, W_Vector, \
+        Body, W_Procedure, W_String, W_Promise, plst2lst, w_undefined, \
+        SchemeSyntaxError, SchemeQuit, WrongArgType, WrongArgsNumber, \
+        w_nil, w_true, w_false, lst2plst
 
 ##
 # operations
 ##
-
-
 class ListOper(W_Procedure):
     def procedure(self, ctx, lst):
         if len(lst) == 0:
@@ -62,7 +54,6 @@ class ListOper(W_Procedure):
     def do_unary_oper(self, x):
         raise NotImplementedError
 
-
 def create_op_class(oper, unary_oper, title, default_result=None):
     class Op(ListOper):
         pass
@@ -98,12 +89,10 @@ def create_op_class(oper, unary_oper, title, default_result=None):
     Op._symbol_name = oper
     return Op
 
-
 Add = create_op_class('+', '', "Add", 0)
 Sub = create_op_class('-', '-', "Sub")
 Mul = create_op_class('*', '', "Mul", 1)
 Div = create_op_class('/', '1 /', "Div")
-
 
 class NumberComparison(W_Procedure):
     def procedure(self, ctx, lst):
@@ -124,13 +113,11 @@ class NumberComparison(W_Procedure):
 
         return W_Boolean(True)
 
-
 class Equal(NumberComparison):
     _symbol_name = "="
 
     def relation(self, a, b):
         return a == b
-
 
 class LessThen(NumberComparison):
     _symbol_name = "<"
@@ -138,20 +125,17 @@ class LessThen(NumberComparison):
     def relation(self, a, b):
         return a < b
 
-
 class LessEqual(NumberComparison):
     _symbol_name = "<="
 
     def relation(self, a, b):
         return a <= b
 
-
 class GreaterThen(NumberComparison):
     _symbol_name = ">"
 
     def relation(self, a, b):
         return a > b
-
 
 class GreaterEqual(NumberComparison):
     _symbol_name = ">="
@@ -166,19 +150,17 @@ class List(W_Procedure):
     def procedure(self, ctx, lst):
         return plst2lst(lst)
 
-
 class Cons(W_Procedure):
     _symbol_name = "cons"
 
     def procedure(self, ctx, lst):
         if len(lst) != 2:
             raise WrongArgsNumber(len(lst), 2)
-
+        
         w_car = lst[0]
         w_cdr = lst[1]
-        # cons is always creating a new pair
+        #cons is always creating a new pair
         return W_Pair(w_car, w_cdr)
-
 
 class Car(W_Procedure):
     _symbol_name = "car"
@@ -189,7 +171,6 @@ class Car(W_Procedure):
             raise WrongArgType(w_pair, "Pair")
         return w_pair.car
 
-
 class Cdr(W_Procedure):
     _symbol_name = "cdr"
 
@@ -198,7 +179,6 @@ class Cdr(W_Procedure):
         if not isinstance(w_pair, W_Pair):
             raise WrongArgType(w_pair, "Pair")
         return w_pair.cdr
-
 
 class CarCdrCombination(W_Procedure):
     def procedure(self, ctx, lst):
@@ -209,7 +189,6 @@ class CarCdrCombination(W_Procedure):
 
     def do_oper(self, w_pair):
         raise NotImplementedError
-
 
 def gen_cxxxr_class(proc_name, oper_lst):
     class Cxxxr(CarCdrCombination):
@@ -255,7 +234,6 @@ def gen_cxxxr_class(proc_name, oper_lst):
     Cxxxr.__name__ = proc_name.capitalize()
     return Cxxxr
 
-
 Caar = gen_cxxxr_class("caar", ['car', 'car'])
 Cadr = gen_cxxxr_class("cadr", ['car', 'cdr'])
 Cdar = gen_cxxxr_class("cdar", ['cdr', 'car'])
@@ -285,7 +263,6 @@ Cddadr = gen_cxxxr_class("cddadr", ['cdr', 'cdr', 'car', 'cdr'])
 Cdddar = gen_cxxxr_class("cdddar", ['cdr', 'cdr', 'cdr', 'car'])
 Cddddr = gen_cxxxr_class("cddddr", ['cdr', 'cdr', 'cdr', 'cdr'])
 
-
 class SetCar(W_Procedure):
     _symbol_name = "set-car!"
 
@@ -297,7 +274,6 @@ class SetCar(W_Procedure):
 
         w_pair.car = w_obj
         return w_undefined
-
 
 class SetCdr(W_Procedure):
     _symbol_name = "set-cdr!"
@@ -311,14 +287,13 @@ class SetCdr(W_Procedure):
         w_pair.cdr = w_obj
         return w_undefined
 
-
 class Append(W_Procedure):
     _symbol_name = "append"
 
     def procedure(self, ctx, lst):
         w_lol = plst2lst(lst)
-        w_lol = Reverse().procedure(ctx, [w_lol])
-
+        w_lol = Reverse().procedure(ctx,[w_lol])
+        
         w_result = w_nil
         while w_lol is not w_nil:
             assert isinstance(w_lol, W_Pair)
@@ -332,7 +307,7 @@ class Append(W_Procedure):
             w_tail = w_head
             w_list = w_list.cdr
             while w_list is not w_nil:
-                if not isinstance(w_list, W_Pair):
+                if not isinstance (w_list, W_Pair):
                     raise WrongArgType(w_list, "List")
                 assert isinstance(w_tail, W_Pair)
                 w_tail.cdr = W_Pair(w_list.car, w_undefined)
@@ -344,7 +319,6 @@ class Append(W_Procedure):
             w_result = w_head
 
         return w_result
-
 
 class AppendE(W_Procedure):
     _symbol_name = "append!"
@@ -368,11 +342,10 @@ class AppendE(W_Procedure):
             while w_list.cdr is not w_nil:
                 w_list = w_list.cdr
                 if not isinstance(w_list, W_Pair):
-                    raise WrongArgType(w_list, "List")
+                    raise WrongArgType(w_list, "List")        
             w_prev_tail = w_list
 
         return w_head
-
 
 class Apply(W_Procedure):
     _symbol_name = "apply"
@@ -380,25 +353,23 @@ class Apply(W_Procedure):
     def procedure_tr(self, ctx, lst):
         if len(lst) != 2:
             raise WrongArgsNumber(len(lst), 2)
-
+        
         (w_procedure, w_lst) = lst
         if not isinstance(w_procedure, W_Procedure):
-            # print w_procedure.to_repr(), "is not a procedure"
+            #print w_procedure.to_repr(), "is not a procedure"
             raise WrongArgType(w_procedure, "Procedure")
 
         if not isinstance(w_lst, W_List):
-            # a print w_lst.to_repr(), "is not a list"
+            #print w_lst.to_repr(), "is not a list"
             raise WrongArgType(w_lst, "List")
 
         return w_procedure.procedure_tr(ctx, lst2plst(w_lst))
-
 
 class Quit(W_Procedure):
     _symbol_name = "quit"
 
     def procedure(self, ctx, lst):
         raise SchemeQuit
-
 
 class Force(W_Procedure):
     _symbol_name = "force"
@@ -412,7 +383,6 @@ class Force(W_Procedure):
             raise WrongArgType(w_promise, "Promise")
 
         return w_promise.force(ctx)
-
 
 class Reverse(W_Procedure):
     _symbol_name = "reverse"
@@ -430,7 +400,6 @@ class Reverse(W_Procedure):
 
         return w_outlist
 
-
 class Map(W_Procedure):
     _symbol_name = "map"
 
@@ -441,7 +410,7 @@ class Map(W_Procedure):
         w_proc = lst[0]
         if not isinstance(w_proc, W_Procedure):
             raise WrongArgType(w_proc, "Procedure")
-
+        
         args_pending = lst[1:]
         args_len = len(args_pending)
         args_current = [None] * args_len
@@ -455,8 +424,8 @@ class Map(W_Procedure):
                     break
                 elif not isinstance(w_item, W_Pair):
                     raise WrongArgType(lst[i+1], "List")
-                args_current[i] = w_item.car
-                args_pending[i] = w_item.cdr
+                args_current[i]= w_item.car
+                args_pending[i]= w_item.cdr
 
             if finished:
                 break
@@ -468,8 +437,7 @@ class Map(W_Procedure):
             w_rev_result = W_Pair(w_call_res, w_rev_result)
 
         # XXX need to find out how to do this tailrecusive
-        return (Reverse().procedure(ctx, [w_rev_result]), None)
-
+        return (Reverse().procedure(ctx,[w_rev_result]), None)
 
 class ForEach(W_Procedure):
     _symbol_name = "for-each"
@@ -478,7 +446,6 @@ class ForEach(W_Procedure):
         # simply relay to map and ignore output
         (res, ctx) = Map().procedure_tr(ctx, lst)
         return (w_undefined, ctx)
-
 
 class MakeString(W_Procedure):
     _symbol_name = "make-string"
@@ -490,7 +457,7 @@ class MakeString(W_Procedure):
         w_number = lst[0]
         if not isinstance(w_number, W_Integer):
             raise WrongArgType(w_number, "Integer")
-
+        
         if len(lst) == 2:
             w_char = lst[1]
         else:
@@ -500,12 +467,9 @@ class MakeString(W_Procedure):
 
         return W_String(w_char.to_string() * w_number.to_fixnum())
 
-
 ##
 # Association lists
-##
-
-
+## 
 class AssocX(W_Procedure):
     def procedure(self, ctx, lst):
         if len(lst) != 2:
@@ -533,20 +497,17 @@ class AssocX(W_Procedure):
     def compare(self, w_obj1, w_obj2):
         raise NotImplementedError
 
-
 class Assq(AssocX):
     _symbol_name = "assq"
 
     def compare(self, w_obj1, w_obj2):
         return w_obj1.eq(w_obj2)
 
-
 class Assv(AssocX):
     _symbol_name = "assv"
 
     def compare(self, w_obj1, w_obj2):
         return w_obj1.eqv(w_obj2)
-
 
 class Assoc(AssocX):
     _symbol_name = "assoc"
@@ -558,8 +519,6 @@ class Assoc(AssocX):
 ##
 # Member function
 ##
-
-
 class MemX(W_Procedure):
     def procedure(self, ctx, lst):
         if len(lst) != 2:
@@ -581,21 +540,18 @@ class MemX(W_Procedure):
 
     def compare(self, w_obj1, w_obj2):
         raise NotImplementedError
-
-
+        
 class Memq(MemX):
     _symbol_name = "memq"
 
     def compare(self, w_obj1, w_obj2):
         return w_obj1.eq(w_obj2)
 
-
 class Memv(MemX):
     _symbol_name = "memv"
 
     def compare(self, w_obj1, w_obj2):
         return w_obj1.eqv(w_obj2)
-
 
 class Member(MemX):
     _symbol_name = "member"
@@ -606,8 +562,6 @@ class Member(MemX):
 ##
 # Equivalnece Predicates
 ##
-
-
 class EquivalnecePredicate(W_Procedure):
     def procedure(self, ctx, lst):
         if len(lst) != 2:
@@ -618,13 +572,11 @@ class EquivalnecePredicate(W_Procedure):
     def predicate(self, a, b):
         raise NotImplementedError
 
-
 class EqP(EquivalnecePredicate):
     _symbol_name = "eq?"
 
     def predicate(self, a, b):
         return a.eq(b)
-
 
 class EqvP(EquivalnecePredicate):
     _symbol_name = "eqv?"
@@ -632,19 +584,15 @@ class EqvP(EquivalnecePredicate):
     def predicate(self, a, b):
         return a.eqv(b)
 
-
 class EqualP(EquivalnecePredicate):
     _symbol_name = "equal?"
 
     def predicate(self, a, b):
         return a.equal(b)
 
-
 ##
 # Number Predicates
 ##
-
-
 class PredicateNumber(W_Procedure):
     def procedure(self, ctx, lst):
         if len(lst) != 1:
@@ -658,7 +606,6 @@ class PredicateNumber(W_Procedure):
 
     def predicate(self, w_obj):
         raise NotImplementedError
-
 
 class NumberP(W_Procedure):
     # number? & Friends are applicable to any schemetype
@@ -678,7 +625,6 @@ class NumberP(W_Procedure):
     def predicate(self, w_obj):
         return True
 
-
 class IntegerP(NumberP):
     _symbol_name = "integer?"
 
@@ -688,21 +634,17 @@ class IntegerP(NumberP):
 
         return True
 
-
 class RealP(NumberP):
     _symbol_name = "real?"
 
     def predicate(self, w_obj):
         return isinstance(w_obj, W_Real)
 
-
 class RationalP(RealP):
     _symbol_name = "rational?"
 
-
 class ComplexP(NumberP):
     _symbol_name = "complex?"
-
 
 class ExactP(PredicateNumber):
     _symbol_name = "exact?"
@@ -710,20 +652,17 @@ class ExactP(PredicateNumber):
     def predicate(self, w_obj):
         return w_obj.exact
 
-
 class InexactP(PredicateNumber):
     _symbol_name = "inexact?"
 
     def predicate(self, w_obj):
         return not w_obj.exact
 
-
 class ZeroP(PredicateNumber):
     _symbol_name = "zero?"
 
     def predicate(self, w_obj):
         return w_obj.to_number() == 0.0
-
 
 class OddP(PredicateNumber):
     _symbol_name = "odd?"
@@ -734,7 +673,6 @@ class OddP(PredicateNumber):
 
         return w_obj.round() % 2 != 0
 
-
 class EvenP(PredicateNumber):
     _symbol_name = "even?"
 
@@ -744,12 +682,9 @@ class EvenP(PredicateNumber):
 
         return w_obj.round() % 2 == 0
 
-
 ##
 # Type Predicates
 ##
-
-
 class TypePredicate(W_Procedure):
     def procedure(self, ctx, lst):
         if len(lst) != 1:
@@ -760,13 +695,11 @@ class TypePredicate(W_Procedure):
     def predicate(self, w_obj):
         raise NotImplementedError
 
-
 class BooleanP(TypePredicate):
     _symbol_name = "boolean?"
 
     def predicate(self, w_obj):
         return isinstance(w_obj, W_Boolean)
-
 
 class SymbolP(TypePredicate):
     _symbol_name = "symbol?"
@@ -774,13 +707,11 @@ class SymbolP(TypePredicate):
     def predicate(self, w_obj):
         return isinstance(w_obj, W_Symbol)
 
-
 class StringP(TypePredicate):
     _symbol_name = "string?"
 
     def predicate(self, w_obj):
         return isinstance(w_obj, W_String)
-
 
 class PairP(TypePredicate):
     _symbol_name = "pair?"
@@ -788,13 +719,11 @@ class PairP(TypePredicate):
     def predicate(self, w_obj):
         return isinstance(w_obj, W_Pair)
 
-
 class ProcedureP(TypePredicate):
     _symbol_name = "procedure?"
 
     def predicate(self, w_obj):
         return isinstance(w_obj, W_Procedure)
-
 
 class CharP(TypePredicate):
     _symbol_name = "char?"
@@ -802,20 +731,17 @@ class CharP(TypePredicate):
     def predicate(self, w_obj):
         return isinstance(w_obj, W_Character)
 
-
 class VectorP(TypePredicate):
     _symbol_name = "vector?"
 
     def predicate(self, w_obj):
         return isinstance(w_obj, W_Vector)
 
-
 class NullP(TypePredicate):
     _symbol_name = "null?"
 
     def predicate(self, w_obj):
         return w_obj is w_nil
-
 
 class Not(W_Procedure):
     _symbol_name = "not"
@@ -834,8 +760,6 @@ class Not(W_Procedure):
 ##
 # Input/Output procedures
 ##
-
-
 class Display(W_Procedure):
     _symbol_name = "display"
 
@@ -851,7 +775,6 @@ class Display(W_Procedure):
         print obj.to_string(),
         return w_undefined
 
-
 class Newline(W_Procedure):
     _symbol_name = "newline"
 
@@ -861,7 +784,6 @@ class Newline(W_Procedure):
 
         print
         return w_undefined
-
 
 class Write(W_Procedure):
     _symbol_name = "write"

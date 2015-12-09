@@ -1,15 +1,12 @@
-from __future__ import absolute_import
 
-from scheme import (
-    object as ssobject,
-    macro,
-)
+import scheme.object as ssobject
+import scheme.macro as macro
 
+import py
 
 class Location(object):
     def __init__(self, w_obj=None):
         self.obj = w_obj
-
 
 class ExecutionContext(object):
     """Execution context implemented as a dict.
@@ -17,7 +14,7 @@ class ExecutionContext(object):
     { "IDENTIFIER": Location(W_Root()) }
     """
     def __init__(self, globalscope=None, scope=None, closure=False,
-                 cont_stack=None):
+            cont_stack=None):
         if scope is None:
             self.scope = {}
         else:
@@ -53,7 +50,7 @@ class ExecutionContext(object):
 
     def copy(self):
         return ExecutionContext(self.globalscope, self.scope.copy(), True,
-                                self.cont_stack)
+                self.cont_stack)
 
     def get(self, name):
         loc = self.scope.get(name, None)
