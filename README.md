@@ -7,6 +7,7 @@ fork from [lang-scheme](https://bitbucket.org/pypy/lang-scheme)
 Build. If you have pypy, you can use it.
 
 ```console
+$ hg clone https://bitbucket.org/pypy/lang-scheme
 $ python rpython/bin/rpython targetscheme.py
 ```
 

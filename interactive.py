@@ -3,8 +3,12 @@
 from __future__ import absolute_import
 
 import sys
+import os
 
 from rpython.rlib.parsing.makepackrat import BacktrackException
+
+here = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(here, 'lang-scheme'))
 
 from scheme.execution import ExecutionContext
 from scheme.object import (
