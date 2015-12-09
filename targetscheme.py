@@ -4,6 +4,9 @@ from __future__ import absolute_import
 import os
 import sys
 
+here = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(here, 'lang-scheme'))
+
 from rpython.rlib.parsing.makepackrat import BacktrackException
 from rpython.rlib.streamio import open_file_as_stream
 

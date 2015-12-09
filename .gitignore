@@ -56,5 +56,6 @@ docs/_build/
 # PyBuilder
 target/
 
+lang-scheme/
 scheme-c
 rpython/_cache/
